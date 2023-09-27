@@ -1,3 +1,7 @@
 # cart-ecomm-tutorial-7
 inventory - monitor ordering and purchasing
-Current version is in beta testing while the tutorial video is being edited.
+
+
+#In this lesson we write multiple APIs to build and inventory module with a line cart comparing ordered units against sold units.
+
+#youTube tutorial video: https://youtu.be/sB0wfWF7ygg
