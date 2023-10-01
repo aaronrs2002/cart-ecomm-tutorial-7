@@ -118,6 +118,7 @@ const CMS = (props) => {
         setSelectionObj((selectionObj) => props.items[Number(selectedItem)]);
         if (activeFunc !== "delete") {
             document.querySelector("[name='itemName']").value = props.items[Number(selectedItem)].itemName;
+            sessionStorage.setItem("activeItem", props.items[Number(selectedItem)].itemName);
             document.querySelector("[name='price']").value = props.items[Number(selectedItem)].price;
             document.querySelector("[name='category']").value = props.items[Number(selectedItem)].category;
             document.querySelector("[name='details']").value = props.items[Number(selectedItem)].details;
@@ -323,18 +324,3 @@ const CMS = (props) => {
 }
 
 export default CMS;
-
-/*
- [
-                    { itemName: "ice", price: 2.99, details: "5 lb bag" },
-                    { itemName: "salt", price: 1.95, details: "1 lb bag" },
-                    { itemName: "plates", price: 4.90, details: "12 paper" },
-                    { itemName: "firewood", price: 6.25, details: "bundle cedar" },
-                    { itemName: "matches", price: .99, details: "long stem 30 count" },
-                    { itemName: "butter", price: 2.45, details: "4 cups" },
-                    { itemName: "yogurt", price: 3.99, details: "6 ounce blueberry" },
-                    { itemName: "cottage cheese", price: 4.90, details: "6 ounce regular flavor" },
-                    { itemName: "comb", price: 1.99, details: "6 inch plastic" },
-                    { itemName: "sun glasses", price: 8.99, details: "women/men variety" }
-                ]
-*/
