@@ -7,7 +7,7 @@ class InventoryChart extends React.Component {
         super(props);
 
         const ordered = this.props.orderQtys;
-        const timeStamp = this.props.months;
+        const timeStamp = this.props.purchaseMonths;
         const purchases = this.props.purchaseQtys
 
         this.state = {
@@ -88,8 +88,8 @@ class InventoryChart extends React.Component {
 
 
     render() {
-        // console.log("this.props.orderQtys: " + this.props.orderQtys);
-        // console.log("this.props.months: " + this.props.months);
+
+
         return (
 
 
