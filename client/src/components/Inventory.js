@@ -12,7 +12,7 @@ const Inventory = (props) => {
     let [qtyOrdered, setQtyOrdered] = useState(0);
     let [allProductOrders, setAllProductOrders] = useState([]);
     let [orderQtys, setOrderQtys] = useState([]);
-    let [months, setMonths] = useState([]);
+    //let [months, setMonths] = useState([]);
     let [totalOrdered, setTotalOrdered] = useState(0);
 
     let [purchaseQtys, setPurchaseQtys] = useState([]);
@@ -20,7 +20,7 @@ const Inventory = (props) => {
     let [purchaseLog, setPurchaseLog] = useState([]);
     let [totalPurchased, setTotalPurchased] = useState(0);
 
-    const grabOrders = (name) => {
+    const grabOrders = (name, monthList) => {
         axios.get("/api/inventory/" + name, props.config).then(
             (res) => {
                 try {
@@ -32,29 +32,27 @@ const Inventory = (props) => {
 
 
 
-                        let tempMonths = [];
+                        let tempMonths = monthList;
                         let tempOrderQtys = [];
+                        for (let i = 0; i < tempMonths.length; i++) {
+                            tempOrderQtys.push(0);
+                        }
 
+                        console.log("tempMonths:  " + tempMonths);
                         for (let i = 0; i < res.data.length; i++) {
                             if (res.data[i].status.indexOf("received") !== -1) {
                                 let theMonth = res.data[i].status.substring(res.data[i].status.length - 19, res.data[i].status.length - 12);
+
                                 if (tempMonths.indexOf(theMonth) !== -1) {
                                     tempOrderQtys[tempMonths.indexOf(theMonth)] = res.data[i].quantity + tempOrderQtys[tempMonths.indexOf(theMonth)];
-                                    console.log("res.data[i].quantity: " + res.data[i].quantity + " - (typeof res.data[i].quantity): " + (typeof res.data[i].quantity));
-
 
                                 } else {
-                                    tempMonths.push(theMonth);
-                                    tempOrderQtys.push(res.data[i].quantity);
-                                    console.log("res.data[i].quantity: " + res.data[i].quantity + " - (typeof res.data[i].quantity): " + (typeof res.data[i].quantity));
+                                    tempMonths = [...tempMonths, theMonth];
+                                    setPurchaseMonths((purchaseMonths) => tempMonths);
+                                    tempOrderQtys = [...tempOrderQtys, res.data[i].quantity];
                                 }
-
-
                             }
-
-
                         }
-
                         let tempTotal = 0;
                         for (let i = 0; i < tempOrderQtys.length; i++) {
                             tempTotal = tempTotal + tempOrderQtys[i];
@@ -62,8 +60,9 @@ const Inventory = (props) => {
 
                         setTotalOrdered((totalOrdered) => tempTotal);
                         console.log("tempTotal: " + tempTotal + " - (typeof tempTotal): " + (typeof tempTotal));
+                        console.log("tempOrderQtys: " + tempOrderQtys);
                         setOrderQtys((orderQtys) => tempOrderQtys);
-                        setMonths((months) => tempMonths);
+                        // setMonths((months) => tempMonths);
 
                         //[{"userTimestamp":"aaron@web-presence.biz:2023-09-21T11:18:44","itemName":"mens e-tip gloves","quantity":1,"status":"ordering:aaron@web-presence.biz:2023-09-21T11:18:44"}]
                     }
@@ -147,7 +146,7 @@ const Inventory = (props) => {
                 (res) => {
                     if (res.data.affectedRows === 1) {
                         props.showAlert("Your order was sent to the database", "success");
-                        grabOrders(props.selectionObj.itemName);
+                        grabOrders(props.selectionObj.itemName, purchaseMonths);
                         setOrderStatus((orderStatus) => status);
                         props.GrabAllItems(sessionStorage.getItem("token"), props.userEmail);
 
@@ -170,7 +169,7 @@ const Inventory = (props) => {
                 (res) => {
                     if (res.data.affectedRows === 1) {
                         props.showAlert("Your order was sent to the database", "success");
-                        grabOrders(props.selectionObj.itemName);
+                        grabOrders(props.selectionObj.itemName, purchaseMonths);
                         setOrderStatus((orderStatus) => status);
                         //CLIENT SIDE UPDATE stockQty IN "items" table
 
@@ -199,7 +198,7 @@ const Inventory = (props) => {
 
     useEffect(() => {
         if (loaded === false && props.selectionObj.itemName) {
-            grabOrders(props.selectionObj.itemName);
+
 
             axios.get("/api/purchaseLog/ordersByName/" + props.selectionObj.itemName, props.config).then(
                 (res) => {
@@ -221,16 +220,16 @@ const Inventory = (props) => {
                         }
                     }
 
-
-
+                    tempMonths = tempMonths.sort(((a, b) => a - b));
+                    console.log("tempMonths: " + tempMonths);
+                    setPurchaseMonths((purchaseMonths) => tempMonths);
                     setTotalPurchased((totalPurchased) => tempTotal);
                     setPurchaseQtys((purchaseQtys) => tempSoldQtys);
-                    setPurchaseMonths((purchaseMonths) => tempMonths);
+
                     setPurchaseLog((purchaseLog) => res.data);
 
-                    setTimeout(() => {
+                    grabOrders(props.selectionObj.itemName, tempMonths);
 
-                    }, 1000);
 
 
                 }, (error) => {
@@ -243,8 +242,7 @@ const Inventory = (props) => {
         }
     });
 
-    console.log("totalOrdered: " + totalOrdered + " - totalPurchased: " + totalPurchased + " - purchaseMonths: " + purchaseMonths);
-    console.log("totalOrdered - totalPurchased: " + (parseInt(totalOrdered) - parseInt(totalPurchased)));
+
     if (document.querySelector("[name='stockQty']")) {
         document.querySelector("[name='stockQty']").value = "In stock: " + (parseInt(totalOrdered) - parseInt(totalPurchased)) + " Total ordered: " + totalOrdered + " - Total sold: " + totalPurchased;
         //console.log("totalOrdered: " + totalOrdered + " - totalPurchased: " + totalPurchased + " - purchaseMonths: " + purchaseMonths);
@@ -276,8 +274,8 @@ const Inventory = (props) => {
                     </div>}
             </div>
             <div className="col-md-12 pb-5">
-                {months.length > 0 && orderQtys.length > 0
-                    ? <InventoryChart orderQtys={orderQtys} months={months} purchaseQtys={purchaseQtys} purchaseMonths={purchaseMonths} /> : <label>No orders</label>}
+                {orderQtys.length > 0 && purchaseMonths.length > 0 && orderQtys.length > 0
+                    ? <InventoryChart orderQtys={orderQtys} purchaseQtys={purchaseQtys} purchaseMonths={purchaseMonths} /> : <label>No orders</label>}
             </div>
         </React.Fragment>
     )
@@ -287,7 +285,7 @@ const Inventory = (props) => {
 export default Inventory;
 
 /*
-    let [purchaseQtys, setPurchaseQtys] = useState([]);
-    let [purchaseMonths, setPurchaseMonths] = useState([]);
-    let [purchaseLog, setPurchaseLog] = useState([]);
+        const ordered = this.props.orderQtys;
+        const timeStamp = this.props.purchaseMonths;
+        const purchases = this.props.purchaseQtys
 */
